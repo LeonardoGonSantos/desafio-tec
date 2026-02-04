@@ -86,29 +86,6 @@ services:
       - fluxocaixa-network
     restart: unless-stopped
 
-  worker:
-    build:
-      context: .
-      dockerfile: src/FluxoCaixa.Worker/Dockerfile
-    container_name: fluxocaixa-worker
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=fluxocaixa;Username=postgres;Password=postgres"
-      RabbitMq__HostName: rabbitmq
-      RabbitMq__Port: 5672
-      RabbitMq__UserName: guest
-      RabbitMq__Password: guest
-    depends_on:
-      postgres:
-        condition: service_healthy
-      migration:
-        condition: service_completed_successfully
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - fluxocaixa-network
-    restart: unless-stopped
-
 volumes:
   postgres-data:
 

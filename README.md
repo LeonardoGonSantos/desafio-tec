@@ -25,8 +25,8 @@ Sistema para controle de fluxo de caixa diário, permitindo:
 **Fluxo de dados:**
 
 1. API recebe lançamento → salva na base + outbox
-2. Background Service publica eventos do outbox para RabbitMQ
-3. Worker consome RabbitMQ → processa no consolidado → atualiza status no outbox
+2. OutboxPublisherService publica eventos do outbox para RabbitMQ
+3. IntegrationWorkerService (na mesma API) consome RabbitMQ → processa no consolidado → atualiza status no outbox
 4. API de Consolidado consulta dados já processados
 
 ## Arquitetura
@@ -45,9 +45,9 @@ graph TB
     Infra --> RMQ[RabbitMQ]
     OutboxPublisher[Outbox Publisher] --> Outbox
     OutboxPublisher --> RMQ
-    RMQ --> Worker[FluxoCaixa.Worker]
-    Worker --> App
-    Worker --> DB
+    RMQ --> IntegrationWorker[IntegrationWorkerService]
+    IntegrationWorker --> App
+    IntegrationWorker --> DB
     API --> DB
 ```
 
@@ -60,9 +60,8 @@ FluxoCaixa/
 │   ├── FluxoCaixa.Domain.Lancamentos/  # Lancamento, Valor, OutboxMessage, Eventos
 │   ├── FluxoCaixa.Domain.Consolidado/  # ConsolidadoDiario, Data, Saldo
 │   ├── FluxoCaixa.Application/     # Use Cases (Vertical Slices), Interfaces
-│   ├── FluxoCaixa.Infrastructure/   # Dapper, Repositories, RabbitMQ, Outbox Publisher
-│   ├── FluxoCaixa.API/             # Controllers, JWT, Swagger
-│   └── FluxoCaixa.Worker/          # Consumer RabbitMQ, Integração Consolidado
+│   ├── FluxoCaixa.Infrastructure/   # Dapper, Repositories, RabbitMQ, Outbox + IntegrationWorker
+│   └── FluxoCaixa.API/             # Controllers, JWT, Swagger
 ├── tests/
 │   ├── FluxoCaixa.Tests.Unit/
 │   └── FluxoCaixa.Tests.Integration/
@@ -72,7 +71,7 @@ FluxoCaixa/
 └── docker-compose.yml
 ```
 
-### Fluxo Outbox + Worker
+### Fluxo Outbox + IntegrationWorker
 
 ```mermaid
 sequenceDiagram
@@ -81,7 +80,7 @@ sequenceDiagram
     participant Outbox as Outbox Table
     participant Publisher as Outbox Publisher
     participant RMQ as RabbitMQ
-    participant Worker
+    participant IntegrationWorker as IntegrationWorkerService
     participant Consolidado
 
     API->>DB: INSERT lancamento
@@ -91,10 +90,10 @@ sequenceDiagram
         Publisher->>RMQ: Publish (OutboxId no header)
         Publisher->>Outbox: UPDATE published_at
     end
-    RMQ->>Worker: Mensagem
-    Worker->>Consolidado: ProcessarLancamentoUseCase
-    Worker->>Outbox: UPDATE integration_status (success/failed)
-    Worker->>RMQ: ACK
+    RMQ->>IntegrationWorker: Mensagem
+    IntegrationWorker->>Consolidado: ProcessarLancamentoUseCase
+    IntegrationWorker->>Outbox: UPDATE integration_status (success/failed)
+    IntegrationWorker->>RMQ: ACK
 ```
 
 ## Tecnologias
@@ -117,12 +116,11 @@ sequenceDiagram
 ### Com Docker Compose
 
 ```bash
-# Subir PostgreSQL, RabbitMQ, migration, API e Worker
+# Subir PostgreSQL, RabbitMQ, migration e API (Outbox + IntegrationWorker rodam na API)
 docker-compose up -d
 
 # Ver logs
 docker-compose logs -f api
-docker-compose logs -f worker
 ```
 
 - **API**: http://localhost:5000  
@@ -141,14 +139,10 @@ export DB_HOST=localhost DB_PORT=5432 POSTGRES_USER=postgres POSTGRES_PASSWORD=p
 ./scripts/init-database.sh
 ```
 
-3. Rodar a API e o Worker:
+3. Rodar a API (OutboxPublisher e IntegrationWorker sobem junto):
 
 ```bash
-# Terminal 1
 dotnet run --project src/FluxoCaixa.API
-
-# Terminal 2
-dotnet run --project src/FluxoCaixa.Worker
 ```
 
 ## Endpoints
@@ -211,8 +205,8 @@ dotnet test tests/FluxoCaixa.Tests.Unit
 
 ## Decisões Técnicas
 
-- **Projeto único**: uma API e um Worker, dois domínios (Lancamentos, Consolidado), um banco PostgreSQL.
-- **Outbox Pattern**: evento gravado na mesma transação do lançamento; publicação assíncrona e atualização de status de integração no outbox pelo Worker.
+- **Projeto único**: uma API com dois Background Services (Outbox Publisher e Integration Worker), dois domínios (Lancamentos, Consolidado), um banco PostgreSQL.
+- **Outbox Pattern**: evento gravado na mesma transação do lançamento; publicação assíncrona e consumo na mesma aplicação; atualização de status de integração no outbox pelo IntegrationWorkerService.
 - **Vertical Slices**: use cases organizados por feature (RegistrarLancamento, ListarLancamentos, ObterConsolidadoDiario, ProcessarLancamento).
 - **Dapper**: queries explícitas e controle de transação (UnitOfWork com mesma conexão).
 - **Correlation ID**: middleware para rastreio de requisições nos logs.

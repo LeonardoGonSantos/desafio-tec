@@ -12,7 +12,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Serilog.Context;
 
-namespace FluxoCaixa.Worker.Services;
+namespace FluxoCaixa.Infrastructure.BackgroundServices;
 
 public class IntegrationWorkerService : BackgroundService
 {
