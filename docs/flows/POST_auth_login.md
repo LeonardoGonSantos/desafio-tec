@@ -4,7 +4,7 @@ Autentica o usuário e retorna um token JWT.
 
 ## Descrição
 
-O endpoint recebe credenciais (usuário e senha). Em ambiente de demonstração, aceita credenciais fixas e emite um JWT válido por 60 minutos. Em produção, deve-se integrar com Identity/banco de usuários e hash de senhas.
+Recebe usuário e senha, valida e retorna JWT (60 min). Credenciais de exemplo: admin/admin123.
 
 ## Diagrama de Sequência
 
@@ -45,7 +45,7 @@ sequenceDiagram
 | username | string | Sim         | Nome do usuário |
 | password | string | Sim         | Senha       |
 
-**Credenciais de demonstração:** `admin` / `admin123`
+**Exemplo:** `admin` / `admin123`
 
 ## Response
 

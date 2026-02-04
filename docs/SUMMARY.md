@@ -53,4 +53,4 @@ Requisitos do desafio (desafio-desenvolvedor-backend-nov25.pdf) mapeados para c�
 
 - **Requisitos do desafio:** [desafio-desenvolvedor-backend-nov25.pdf](../desafio-desenvolvedor-backend-nov25.pdf) (raiz do repositório)
 - **Visão geral e execução:** [README.md](../README.md)
-- **Resumo requisitos vs implementação:** [docs/SUMMARY.md](SUMMARY.md) (este arquivo)
+- **Resumo requisitos vs implementação:** [docs/SUMMARY.md](SUMMARY.md)
