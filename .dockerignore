@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/.git/
+**/.vs/
+**/.idea/
+**/*.user
+**/*.suo
+**/Thumbs.db
+*.md
+*.pdf
+tests/
+docs/
+.dockerignore
+.gitignore
