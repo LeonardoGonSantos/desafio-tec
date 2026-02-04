@@ -1,0 +1,39 @@
+# Build
+bin/
+obj/
+out/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Test
+**/TestResults/
+*.trx
+*.coverage
+
+# NuGet
+*.nupkg
+packages/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# User secrets
+secrets.json
+*.userprefs
+
+# Docker
+.docker/
+
+# Misc
+*.swp
+*~
